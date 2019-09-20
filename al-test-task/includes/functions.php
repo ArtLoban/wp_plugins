@@ -1,5 +1,8 @@
 <?php
 
+/*** Hooks ***/
+add_action('wp_enqueue_scripts', 'al_add_scripts');
+
 // Additional input fields to form `Users -> Add New` in admin panel
 add_action( 'user_new_form', 'al_admin_add_new_user_fields' );
 // Save additional input fields when create a new user (admin panel)
@@ -19,6 +22,10 @@ add_shortcode( 'users_list', 'al_render_users_list' );
 
 
 /*** FUNCTIONS ***/
+
+function al_add_scripts() {
+    wp_enqueue_style( 'al_main_style', plugins_url( 'assets/css/al_main.css', __DIR__), array(), time() );
+}
 
 // Additional input fields to form `Users -> Add New` in admin panel
 function al_admin_add_new_user_fields() {
@@ -75,39 +82,43 @@ function al_admin_add_new_user_fields() {
 
 // Save additional input fields when create a new user (admin panel)
 function al_admin_save_new_user_fields( $user_id ) {
+    $encoder = getEncoder();
 
     // User Address
-    if ( ! empty( $_POST['address'] ) ) {
-        $address = encryptData( $_POST['address']);
+    $address = isset($_POST['address']) ? $_POST['address'] : '';
+    if ( ! empty( $address ) ) {
+        $address = encryptData( $address, $encoder);
         update_user_meta( $user_id, 'address', $address );
     }
     // Phone number
     if ( ! empty( $_POST['phone_number']) ) {
-        $phone_number = encryptData( $_POST['phone_number']);
+        $phone_number = encryptData( $_POST['phone_number'], $encoder);
         update_user_meta( $user_id, 'phone_number', $phone_number );
     }
     // Gender
     if ( ! empty( $_POST['gender']) ) {
-        $gender = encryptData( $_POST['gender']);
+        $gender = encryptData( $_POST['gender'], $encoder);
         update_user_meta( $user_id, 'gender', $gender );
     }
     // Marital status
     if ( ! empty( $_POST['marital_status']) ) {
-        $marital_status = encryptData( $_POST['marital_status']);
+        $marital_status = encryptData( $_POST['marital_status'], $encoder);
         update_user_meta( $user_id, 'marital_status', $marital_status );
     }
 }
 
 // Render additional input fields at User Profile in admin panel
 function al_show_user_additional_fields( $user ) {
+    $encoder = getEncoder();
+
     $address        = get_the_author_meta( 'address', $user->ID );
-    $address        = dencryptData($address);
+    $address        = decryptData($address, $encoder);
     $phone_number   = get_the_author_meta( 'phone_number', $user->ID );
-    $phone_number   = dencryptData($phone_number);
+    $phone_number   = decryptData($phone_number, $encoder);
     $gender         = get_the_author_meta( 'gender', $user->ID );
-    $gender         = dencryptData($gender);
+    $gender         = decryptData($gender, $encoder);
     $marital_status = get_the_author_meta( 'marital_status', $user->ID );
-    $marital_status   = dencryptData($marital_status);
+    $marital_status   = decryptData($marital_status, $encoder);
     ?>
         <h3>Additional Information</h3>
         <table class="form-table">
@@ -165,31 +176,33 @@ function al_update_user_additional_profile_fields( $user_id ) {
         return false;
     }
 
+    $encoder = getEncoder();
+
     // User Address
     if ( ! empty( $_POST['address'] ) ) {
-        $address = encryptData( $_POST['address']);
+        $address = encryptData( $_POST['address'], $encoder);
         update_user_meta( $user_id, 'address', $address );
     }
     // Phone number
     if ( ! empty( $_POST['phone_number']) ) {
-        $phone_number = encryptData( $_POST['phone_number']);
+        $phone_number = encryptData( $_POST['phone_number'], $encoder);
         update_user_meta( $user_id, 'phone_number', $phone_number );
     }
     // Gender
     if ( ! empty( $_POST['gender']) ) {
-        $gender = encryptData( $_POST['gender']);
+        $gender = encryptData( $_POST['gender'], $encoder);
         update_user_meta( $user_id, 'gender', $gender );
     }
     // Marital status
     if ( ! empty( $_POST['marital_status']) ) {
-        $marital_status = encryptData( $_POST['marital_status']);
+        $marital_status = encryptData( $_POST['marital_status'], $encoder);
         update_user_meta( $user_id, 'marital_status', $marital_status );
     }
 }
 
 // Render the list of all Users
 function al_render_users_list( $atts ) {
-    $number = 3; // Items per page
+    $number = 5; // Items per page
     $paged = (get_query_var('page')) ? get_query_var('page') : 1;
     $offset = ($paged - 1) * $number;
     $users = get_users(); // All users
@@ -201,11 +214,13 @@ function al_render_users_list( $atts ) {
     ]);
     $total_pages = ceil($total_users / $number);
 
-    $html = '<ul>';
+    $index = $offset + 1;
+    $html = '<ul class="users_list">';
     foreach($users_per_page as $user){
         $url = add_query_arg( 'id', $user->ID, get_site_url(). '/users' );
         $url = esc_url($url);
-        $html .= '<li><a href="' .$url. '">' . $user->display_name . ' (' . $user->user_email . ')'.'</a></li>';
+        $html .= '<li><span>' . $index . '.</span><a href="' .$url. '">' . $user->display_name . ' (' . $user->user_email . ')'.'</a></li>';
+        $index++;
     }
     $html .= '</ul>';
 
@@ -234,19 +249,23 @@ function al_user_template( $template ) {
     return $template;
 }
 
-// TODO
+// Get Encoder class instance
+function getEncoder() {
+    include_once 'Encoder.php';
+
+    return new Encoder();
+}
+
 // Encryption algorithm
-function encryptData( $data ) {
-//    $data =
+function encryptData( $data, EncoderInterface $encoder ) {
+    $data = $encoder->encodeData($data);
 
-    return $data;
+    return base64_encode($data);
 }
 
-// TODO
 // Decryption algorithm
-function dencryptData( $data ) {
-//    $data =
+function decryptData( $data, EncoderInterface $encoder ) {
+    $data =  base64_decode($data);
 
-    return $data;
+    return $encoder->decodeData($data);
 }
-

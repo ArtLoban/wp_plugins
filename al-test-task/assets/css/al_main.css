@@ -1,0 +1,46 @@
+/*** `HOME` page ***/
+.entry-content .users_list a {
+    box-shadow: none;
+    text-decoration: none !important;
+}
+
+.users_list {
+    padding-top: 30px;
+    list-style: none;
+}
+
+.users_list li {
+    padding: 5px 0;
+    border-bottom: 1px solid #ddd;
+}
+
+.users_list li:hover {
+    background-color: #f5f5f5;
+}
+
+.users_list li a {
+    text-decoration: none;
+}
+
+.users_list span {
+    padding-right: 10px;
+}
+
+/*** `USER INFORMATION` page ***/
+.user_header {
+    text-align: center;
+    padding: 20px 0;
+}
+
+.user_info_table tr:hover {
+    background-color: #f5f5f5;
+}
+
+.user_info_table th {
+    text-align: right;
+    padding-right: 20px;
+}
+
+.user_info_table td {
+    padding-left: 20px;
+}

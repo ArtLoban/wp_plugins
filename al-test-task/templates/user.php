@@ -5,21 +5,25 @@
 
 get_header();
 
+include_once plugin_dir_path( __DIR__  ) . 'includes/Encoder.php';
+$encoder = new Encoder();
+
 $user_id        = $_GET['id'];
 $user_data      = get_userdata( $user_id );
 $address        = get_the_author_meta( 'address', $user_id );
-$address        = dencryptData($address);
+$address        = decryptData($address, $encoder);
 $phone_number   = get_the_author_meta( 'phone_number', $user_id );
-$phone_number   = dencryptData($phone_number);
+$phone_number   = decryptData($phone_number, $encoder);
 $gender         = get_the_author_meta( 'gender', $user_id );
-$gender         = dencryptData($gender);
+$gender         = decryptData($gender, $encoder);
 $marital_status = get_the_author_meta( 'marital_status', $user_id );
-$marital_status   = dencryptData($marital_status);
+$marital_status = decryptData($marital_status, $encoder);
 ?>
-    <a href="<?php echo home_url(); ?>">Back</a>
 
-    <h1>User Information</h1>
-    <table class="form-table">
+    <a href="<?php echo home_url(); ?>">« Back</a>
+
+    <h2 class="user_header">User Information</h2>
+    <table class="user_info_table">
         <tr>
             <th>Id</th>
             <td><?php echo $user_id; ?></td>
